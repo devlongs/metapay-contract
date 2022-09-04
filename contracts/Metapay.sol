@@ -1,19 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0
 
-// SPDX-License-Identifier: MIT
-
-pragma solidity 0.4.17;
+pragma solidity 0.8.9;
 
 contract CampaignFactory {
-    address[] public deployedCampaigns;
+    Campaign[] public deployedCampaigns;
 
     function createCampaign(uint minimum) public {
-        address newCampaign = new Campaign(minimum, msg.sender);
+        Campaign newCampaign = new Campaign(minimum, msg.sender);
 
         deployedCampaigns.push(newCampaign);
     }
 
-    function getDeployedCampaigns() public view returns (address[]) {
+    function getDeployedCampaigns() public view returns (Campaign[] memory) {
         return deployedCampaigns;
     }
 }
@@ -25,9 +23,9 @@ contract Campaign {
         address recipient;
         bool complete;
         uint approvalCount;
-        mapping(address => bool) approvals;
     }
-
+    uint256 public approveID;
+    mapping(uint256 => mapping(address => bool)) public approvals;
     Request[] public requests;
     address public manager;
     uint public minimunContribution;
@@ -39,7 +37,7 @@ contract Campaign {
         _;
     }
 
-    function Campaign(uint minimum, address creator) public {
+    constructor(uint minimum, address creator) {
         manager = creator;
         minimunContribution = minimum;
     }
@@ -63,16 +61,18 @@ contract Campaign {
             complete: false,
             approvalCount: 0
         });
-
         requests.push(newRequst);
+        approveID++;
     }
 
     function approveRequest(uint index) public {
         Request storage request = requests[index];
         require(approvers[msg.sender]);
-        require(!request.approvals[msg.sender]);
+        //require(!request.approvals[msg.sender]);
+        require(approvals[approveID][msg.sender]);
 
-        request.approvals[msg.sender] = true;
+        //request.approvals[msg.sender] = true;
+        approvals[approveID][msg.sender] = true;
         request.approvalCount++;
     }
 
@@ -82,7 +82,8 @@ contract Campaign {
         require(request.approvalCount > (approversCount / 2));
         require(!request.complete);
 
-        request.recipient.transfer(request.value);
+        address payable recipient = payable(request.recipient);
+        recipient.transfer(request.value);
         request.complete = true;
     }
 }
