@@ -11,13 +11,13 @@ contract CampaignFactory {
         deployedCampaigns.push(newCampaign);
     }
 
-    function getDeployedCampaigns() public view returns(Campaign[] memory){
+    function getDeployedCampaigns() public view returns (Campaign[] memory) {
         return deployedCampaigns;
     }
 }
 
 contract Campaign {
-    struct Request{
+    struct Request {
         string description;
         uint value;
         address recipient;
@@ -33,13 +33,12 @@ contract Campaign {
     mapping(address => bool) public approvers;
     uint public approversCount;
 
-
-    modifier restricted(){
+    modifier restricted() {
         require(msg.sender == manager);
         _;
     }
 
-    constructor(uint minimum, address creator){
+    constructor(uint minimum, address creator) {
         manager = creator;
         minimunContribution = minimum;
     }
@@ -51,22 +50,32 @@ contract Campaign {
         approversCount++;
     }
 
-    function createRequest(string memory description, uint value, address recipient) public restricted {
-        Request memory newRequst = Request({description: description, value: value, recipient: recipient, complete: false, approvalCount: 0});
+    function createRequest(
+        string memory description,
+        uint value,
+        address recipient
+    ) public restricted {
+        Request memory newRequst = Request({
+            description: description,
+            value: value,
+            recipient: recipient,
+            complete: false,
+            approvalCount: 0
+        });
         requests.push(newRequst);
         approveID++;
     }
 
-    function approveRequest(uint index) public{
+    function approveRequest(uint index) public {
         Request storage request = requests[index];
         require(approvers[msg.sender]);
         //require(!request.approvals[msg.sender]);
         require(!approvals[approveID][msg.sender]);
-        
+
         //request.approvals[msg.sender] = true;
         approvals[approveID][msg.sender] = true;
         request.approvalCount++;
-    } 
+    }
 
     function finalizedRequest(uint index) public restricted {
         Request storage request = requests[index];
@@ -79,7 +88,23 @@ contract Campaign {
         request.complete = true;
     }
 
-    function getSummary() public view returns(uint, uint, uint, uint, address){
-        return(minimunContribution, address(this).balance, requests.length, approversCount, manager);
+    function getSummary()
+        public
+        view
+        returns (
+            uint,
+            uint,
+            uint,
+            uint,
+            address
+        )
+    {
+        return (
+            minimunContribution,
+            address(this).balance,
+            requests.length,
+            approversCount,
+            manager
+        );
     }
 }
