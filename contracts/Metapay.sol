@@ -5,6 +5,7 @@ pragma solidity 0.8.9;
 contract CampaignFactory {
     Campaign[] public deployedCampaigns;
 
+    // Create campaign function
     function createCampaign(uint minimum) public {
         Campaign newCampaign = new Campaign(minimum, msg.sender);
 
